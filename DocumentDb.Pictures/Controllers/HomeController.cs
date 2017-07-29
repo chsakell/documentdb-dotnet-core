@@ -10,6 +10,7 @@ namespace DocumentDb.Pictures.Controllers
     {
         public IActionResult Index()
         {
+            
             return View();
         }
 
