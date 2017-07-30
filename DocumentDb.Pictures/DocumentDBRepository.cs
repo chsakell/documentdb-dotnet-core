@@ -14,15 +14,35 @@
     {
         private static readonly string Endpoint = "https://localhost:8081";
         private static readonly string Key = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-        private static readonly string DatabaseId = "BlogDb";
-        private static readonly string CollectionId = "Posts";
+        private static readonly string DatabaseId = "Gallery";
+        private static readonly string CollectionId = "Pictures";
         private static DocumentClient client;
 
         public static async Task<T> GetItemAsync(string id)
         {
             try
             {
-                Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(id) });
+                Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
+                return (T)(dynamic)document;
+            }
+            catch (DocumentClientException e)
+            {
+                if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        public static async Task<T> GetItemAsync(string id, string partitionKey)
+        {
+            try
+            {
+                Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
                 return (T)(dynamic)document;
             }
             catch (DocumentClientException e)
@@ -68,6 +88,11 @@
         public static async Task DeleteItemAsync(string id)
         {
             await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
+        }
+
+        public static async Task DeleteItemAsync(string id, string partitionKey)
+        {
+            await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
         }
 
         public static void Initialize()

@@ -12,7 +12,7 @@
         [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
-            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync(d => !d.Completed);
+            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync(d => d.Approved);
             return View(items);
         }
         
@@ -28,7 +28,7 @@
         [HttpPost]
         [ActionName("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync([Bind("Id,Name,Description,Completed")] PictureItem item)
+        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item)
         {
             if (ModelState.IsValid)
             {
@@ -42,7 +42,7 @@
         [HttpPost]
         [ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditAsync([Bind("Id,Name,Description,Completed")] PictureItem item)
+        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item)
         {
             if (ModelState.IsValid)
             {
@@ -54,14 +54,14 @@
         }
 
         [ActionName("Edit")]
-        public async Task<ActionResult> EditAsync(string id)
+        public async Task<ActionResult> EditAsync(string id, string category)
         {
             if (id == null)
             {
                 return BadRequest();
             }
 
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id);
+            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
             if (item == null)
             {
                 return NotFound();
@@ -71,14 +71,14 @@
         }
 
         [ActionName("Delete")]
-        public async Task<ActionResult> DeleteAsync(string id)
+        public async Task<ActionResult> DeleteAsync(string id, string category)
         {
             if (id == null)
             {
                 return BadRequest();
             }
 
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id);
+            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
             if (item == null)
             {
                 return NotFound();
@@ -90,16 +90,16 @@
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmedAsync([Bind("Id")] string id)
+        public async Task<ActionResult> DeleteConfirmedAsync([Bind("Id, Category")] string id, string category)
         {
-            await DocumentDBRepository<PictureItem>.DeleteItemAsync(id);
+            await DocumentDBRepository<PictureItem>.DeleteItemAsync(id, category);
             return RedirectToAction("Index");
         }
 
         [ActionName("Details")]
-        public async Task<ActionResult> DetailsAsync(string id)
+        public async Task<ActionResult> DetailsAsync(string id, string category)
         {
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id);
+            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
             return View(item);
         }
     }
