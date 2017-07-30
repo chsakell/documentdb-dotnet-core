@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using DocumentDb.Pictures.Models;
 
 namespace DocumentDb.Pictures
 {
@@ -55,6 +56,8 @@ namespace DocumentDb.Pictures
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            DocumentDBRepository<PictureItem>.Initialize();
         }
     }
 }
