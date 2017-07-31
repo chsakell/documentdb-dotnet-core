@@ -6,9 +6,22 @@
     //using Models;
     using Microsoft.AspNetCore.Mvc;
     using Models;
+    using Microsoft.AspNetCore.Mvc.Rendering;
+    using System.Collections.Generic;
 
     public class PicturesController : Controller
     {
+        private List<string> Categories;
+
+        public PicturesController()
+        {
+            this.Categories = new List<string>()
+            {
+                "3D & Abstract", "Animals & Birds", "Anime", "Beach","Bikes", "Cars","Celebrations", "Celebrities","Christmas", "Creative Graphics","Cute", "Digital Universe","Dreamy & Fantasy", "Flowers","Games", "Inspirational","Love", "Military",
+                "Music", "Movies","Nature", "Others","Photography", "Sports","Technology", "Travel & World","Vector & Designs"
+            };
+        }
+
         [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
@@ -21,6 +34,7 @@
         [ActionName("Create")]
         public async Task<IActionResult> CreateAsync()
         {
+            FillCategories();
             return View();
         }
 #pragma warning restore 1998
@@ -101,6 +115,18 @@
         {
             PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
             return View(item);
+        }
+
+        private void FillCategories()
+        {
+            List<SelectListItem> items = new List<SelectListItem>();
+
+            foreach(var category in Categories)
+            {
+                items.Add(new SelectListItem { Text = category, Value = category });
+            }
+
+            ViewBag.Category = items;
         }
     }
 }
