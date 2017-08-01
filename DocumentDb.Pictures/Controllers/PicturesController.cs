@@ -56,11 +56,19 @@
         [HttpPost]
         [ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item)
+        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, [Bind("oldCategory")] string oldCategory)
         {
             if (ModelState.IsValid)
             {
-                await DocumentDBRepository<PictureItem>.UpdateItemAsync(item.Id, item);
+                if (item.Category == oldCategory)
+                {
+                    await DocumentDBRepository<PictureItem>.UpdateItemAsync(item.Id, item);
+                }
+                else
+                {
+                    await DocumentDBRepository<PictureItem>.DeleteItemAsync(item.Id, oldCategory);
+                    await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+                }
                 return RedirectToAction("Index");
             }
 
@@ -81,6 +89,7 @@
                 return NotFound();
             }
 
+            FillCategories(category);
             return View(item);
         }
 
@@ -117,13 +126,20 @@
             return View(item);
         }
 
-        private void FillCategories()
+        private void FillCategories(string selectedCategory = null)
         {
             List<SelectListItem> items = new List<SelectListItem>();
 
             foreach(var category in Categories)
             {
-                items.Add(new SelectListItem { Text = category, Value = category });
+                if (!string.IsNullOrEmpty(selectedCategory) && category == selectedCategory)
+                {
+                    items.Add(new SelectListItem { Text = category, Value = category, Selected = true });
+                }
+                else
+                {
+                    items.Add(new SelectListItem { Text = category, Value = category });
+                }
             }
 
             ViewBag.Category = items;
