@@ -95,6 +95,11 @@
             await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
         }
 
+        public static async Task<ResourceResponse<Attachment>> CreateAttachmentAsync(string attachmentsLink, object attachment, RequestOptions options)
+        {
+            return await client.CreateAttachmentAsync(attachmentsLink, attachment, options);
+        }
+
         public static void Initialize()
         {
             client = new DocumentClient(new Uri(Endpoint), Key);

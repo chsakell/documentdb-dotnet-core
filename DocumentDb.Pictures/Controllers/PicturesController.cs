@@ -8,6 +8,10 @@
     using Models;
     using Microsoft.AspNetCore.Mvc.Rendering;
     using System.Collections.Generic;
+    using Microsoft.AspNetCore.Http;
+    using System.IO;
+    using Microsoft.Azure.Documents;
+    using Microsoft.Azure.Documents.Client;
 
     public class PicturesController : Controller
     {
@@ -28,7 +32,7 @@
             var items = await DocumentDBRepository<PictureItem>.GetItemsAsync(d => d.Approved);
             return View(items);
         }
-        
+
 
 #pragma warning disable 1998
         [ActionName("Create")]
@@ -42,11 +46,29 @@
         [HttpPost]
         [ActionName("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item)
+        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, ICollection<IFormFile> files)
         {
+
+
             if (ModelState.IsValid)
             {
-                await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+                Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        var fileStream = new MemoryStream();
+                        await file.CopyToAsync(fileStream);
+
+                        //Create the attachment
+                        using (fileStream)
+                        {
+                            Attachment attachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, fileStream, null);
+                        }
+                    }
+                }
+
                 return RedirectToAction("Index");
             }
 
@@ -130,7 +152,7 @@
         {
             List<SelectListItem> items = new List<SelectListItem>();
 
-            foreach(var category in Categories)
+            foreach (var category in Categories)
             {
                 if (!string.IsNullOrEmpty(selectedCategory) && category == selectedCategory)
                 {
