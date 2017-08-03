@@ -8,7 +8,7 @@
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
     using Microsoft.Azure.Documents.Linq;
-
+    using System.Collections.ObjectModel;
 
     public static class DocumentDBRepository<T> where T : class
     {
@@ -42,6 +42,11 @@
         {
             try
             {
+                if (client == null)
+                {
+                    client = new DocumentClient(new Uri(Endpoint), Key);
+                }
+
                 Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
                 return (T)(dynamic)document;
             }
@@ -100,11 +105,16 @@
             return await client.CreateAttachmentAsync(attachmentsLink, attachment, options);
         }
 
+        public static async Task<ResourceResponse<Attachment>> ReadAttachmentAsync(string attachmentLink, string partitionkey)
+        {
+            return await client.ReadAttachmentAsync(attachmentLink, new RequestOptions() { PartitionKey = new PartitionKey(partitionkey) });
+        }
+
         public static void Initialize()
         {
             client = new DocumentClient(new Uri(Endpoint), Key);
             CreateDatabaseIfNotExistsAsync().Wait();
-            CreateCollectionIfNotExistsAsync().Wait();
+            CreateCollectionIfNotExistsAsync("category").Wait();
         }
 
         private static async Task CreateDatabaseIfNotExistsAsync()
@@ -126,7 +136,7 @@
             }
         }
 
-        private static async Task CreateCollectionIfNotExistsAsync()
+        private static async Task CreateCollectionIfNotExistsAsync(string partitionkey = null)
         {
             try
             {
@@ -136,10 +146,27 @@
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    await client.CreateDocumentCollectionAsync(
-                        UriFactory.CreateDatabaseUri(DatabaseId),
-                        new DocumentCollection { Id = CollectionId },
-                        new RequestOptions { OfferThroughput = 1000 });
+                    if (string.IsNullOrEmpty(partitionkey))
+                    {
+                        await client.CreateDocumentCollectionAsync(
+                            UriFactory.CreateDatabaseUri(DatabaseId),
+                            new DocumentCollection { Id = CollectionId },
+                            new RequestOptions { OfferThroughput = 1000 });
+                    }
+                    else
+                    {
+                        await client.CreateDocumentCollectionAsync(
+                            UriFactory.CreateDatabaseUri(DatabaseId),
+                            new DocumentCollection {
+                                Id = CollectionId,
+                                PartitionKey = new PartitionKeyDefinition
+                                {
+                                    Paths = new Collection<string> { "/" + partitionkey }
+                                }
+                            },
+                            new RequestOptions { OfferThroughput = 1000 });
+                    }
+
                 }
                 else
                 {

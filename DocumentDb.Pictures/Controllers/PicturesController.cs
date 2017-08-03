@@ -12,6 +12,7 @@
     using System.IO;
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
+    using System;
 
     public class PicturesController : Controller
     {
@@ -58,14 +59,25 @@
                 {
                     if (file.Length > 0)
                     {
-                        var fileStream = new MemoryStream();
-                        await file.CopyToAsync(fileStream);
+                        var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
+                        var input = new byte[file.OpenReadStream().Length];
+                        file.OpenReadStream().Read(input, 0, input.Length);
+                        attachment.SetPropertyValue("file", input);
 
-                        //Create the attachment
-                        using (fileStream)
-                        {
-                            Attachment attachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, fileStream, null);
-                        }
+                        //var requestOptions = new RequestOptions
+                        //{
+                        //    PartitionKey = new PartitionKey(0)
+                        //};
+                        ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+
+                        //var fileStream = new MemoryStream();
+                        //await file.CopyToAsync(fileStream);
+
+                        ////Create the attachment
+                        //using (fileStream)
+                        //{
+                        //    Attachment attachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, fileStream, null);
+                        //}
                     }
                 }
 
@@ -144,7 +156,27 @@
         [ActionName("Details")]
         public async Task<ActionResult> DetailsAsync(string id, string category)
         {
+            //PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+
+            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
             PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+
+            //var attachLink = document.AttachmentsLink + "wallpaper/";
+            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+            var file = attachment.GetPropertyValue<byte[]>("file");
+
+            if (file != null)
+            {
+                string bytes = Convert.ToBase64String(file);
+                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
+            }
+            else
+            {
+                ViewBag.Image = string.Empty;
+            }
+
             return View(item);
         }
 
