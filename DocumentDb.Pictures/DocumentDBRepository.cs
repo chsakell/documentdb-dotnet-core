@@ -105,6 +105,11 @@
             return await client.CreateAttachmentAsync(attachmentsLink, attachment, options);
         }
 
+        public static async Task<ResourceResponse<Attachment>> ReplaceAttachmentAsync(Attachment attachment, RequestOptions options)
+        {
+            return await client.ReplaceAttachmentAsync(attachment, options);
+        }
+
         public static async Task<ResourceResponse<Attachment>> ReadAttachmentAsync(string attachmentLink, string partitionkey)
         {
             return await client.ReadAttachmentAsync(attachmentLink, new RequestOptions() { PartitionKey = new PartitionKey(partitionkey) });

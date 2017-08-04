@@ -47,7 +47,7 @@
         [HttpPost]
         [ActionName("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, ICollection<IFormFile> files)
+        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, IFormFile file)
         {
 
 
@@ -55,30 +55,13 @@
             {
                 Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
 
-                foreach (var file in files)
+                if (file != null)
                 {
-                    if (file.Length > 0)
-                    {
-                        var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
-                        var input = new byte[file.OpenReadStream().Length];
-                        file.OpenReadStream().Read(input, 0, input.Length);
-                        attachment.SetPropertyValue("file", input);
-
-                        //var requestOptions = new RequestOptions
-                        //{
-                        //    PartitionKey = new PartitionKey(0)
-                        //};
-                        ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
-
-                        //var fileStream = new MemoryStream();
-                        //await file.CopyToAsync(fileStream);
-
-                        ////Create the attachment
-                        //using (fileStream)
-                        //{
-                        //    Attachment attachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, fileStream, null);
-                        //}
-                    }
+                    var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
+                    var input = new byte[file.OpenReadStream().Length];
+                    file.OpenReadStream().Read(input, 0, input.Length);
+                    attachment.SetPropertyValue("file", input);
+                    ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                 }
 
                 return RedirectToAction("Index");
@@ -90,19 +73,35 @@
         [HttpPost]
         [ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, [Bind("oldCategory")] string oldCategory)
+        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, [Bind("oldCategory")] string oldCategory, IFormFile file)
         {
             if (ModelState.IsValid)
             {
+                Document document = null;
+
                 if (item.Category == oldCategory)
                 {
-                    await DocumentDBRepository<PictureItem>.UpdateItemAsync(item.Id, item);
+                    document = await DocumentDBRepository<PictureItem>.UpdateItemAsync(item.Id, item);
                 }
                 else
                 {
                     await DocumentDBRepository<PictureItem>.DeleteItemAsync(item.Id, oldCategory);
-                    await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+                    document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+                    
                 }
+
+                if (file != null)
+                {
+                    var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+                    Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+                    //var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
+                    var input = new byte[file.OpenReadStream().Length];
+                    file.OpenReadStream().Read(input, 0, input.Length);
+                    attachment.SetPropertyValue("file", input);
+                    ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.ReplaceAttachmentAsync(attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                }
+
                 return RedirectToAction("Index");
             }
 
@@ -124,6 +123,25 @@
             }
 
             FillCategories(category);
+
+            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
+
+            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+
+            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+            var file = attachment.GetPropertyValue<byte[]>("file");
+
+            if (file != null)
+            {
+                string bytes = Convert.ToBase64String(file);
+                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
+            }
+            else
+            {
+                ViewBag.Image = string.Empty;
+            }
+
             return View(item);
         }
 
@@ -156,12 +174,9 @@
         [ActionName("Details")]
         public async Task<ActionResult> DetailsAsync(string id, string category)
         {
-            //PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
-
             Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
             PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
 
-            //var attachLink = document.AttachmentsLink + "wallpaper/";
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
             Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
