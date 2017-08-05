@@ -15,6 +15,9 @@ namespace DocumentDb.Pictures
     {
         public Startup(IHostingEnvironment env)
         {
+            Config.WebRootPath = env.WebRootPath;
+            Config.ContentRootPath = env.ContentRootPath;
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)

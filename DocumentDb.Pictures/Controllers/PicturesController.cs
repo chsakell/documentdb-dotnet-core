@@ -49,11 +49,10 @@
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, IFormFile file)
         {
-
-
             if (ModelState.IsValid)
             {
-                Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
+                RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
+                Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item, options);
 
                 if (file != null)
                 {
@@ -73,7 +72,7 @@
         [HttpPost]
         [ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, [Bind("oldCategory")] string oldCategory, IFormFile file)
+        public async Task<ActionResult> EditAsync(PictureItem item, [Bind("oldCategory")] string oldCategory, IFormFile file)
         {
             if (ModelState.IsValid)
             {

@@ -9,6 +9,7 @@
     using Microsoft.Azure.Documents.Client;
     using Microsoft.Azure.Documents.Linq;
     using System.Collections.ObjectModel;
+    using System.IO;
 
     public static class DocumentDBRepository<T> where T : class
     {
@@ -85,6 +86,11 @@
             return await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item);
         }
 
+        public static async Task<Document> CreateItemAsync(T item, RequestOptions options)
+        {
+            return await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item, options);
+        }
+
         public static async Task<Document> UpdateItemAsync(string id, T item)
         {
             return await client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), item);
@@ -119,7 +125,8 @@
         {
             client = new DocumentClient(new Uri(Endpoint), Key);
             CreateDatabaseIfNotExistsAsync().Wait();
-            CreateCollectionIfNotExistsAsync("category").Wait();
+            DocumentCollection documentCollection = CreateCollectionIfNotExistsAsync("category").Result;
+            CreateTriggerIfNotExistsAsync(documentCollection).Wait();
         }
 
         private static async Task CreateDatabaseIfNotExistsAsync()
@@ -141,11 +148,11 @@
             }
         }
 
-        private static async Task CreateCollectionIfNotExistsAsync(string partitionkey = null)
+        private static async Task<ResourceResponse<DocumentCollection>> CreateCollectionIfNotExistsAsync(string partitionkey = null)
         {
             try
             {
-                await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+                return await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
             }
             catch (DocumentClientException e)
             {
@@ -153,14 +160,14 @@
                 {
                     if (string.IsNullOrEmpty(partitionkey))
                     {
-                        await client.CreateDocumentCollectionAsync(
+                        return await client.CreateDocumentCollectionAsync(
                             UriFactory.CreateDatabaseUri(DatabaseId),
                             new DocumentCollection { Id = CollectionId },
                             new RequestOptions { OfferThroughput = 1000 });
                     }
                     else
                     {
-                        await client.CreateDocumentCollectionAsync(
+                        return await client.CreateDocumentCollectionAsync(
                             UriFactory.CreateDatabaseUri(DatabaseId),
                             new DocumentCollection {
                                 Id = CollectionId,
@@ -177,6 +184,31 @@
                 {
                     throw;
                 }
+            }
+        }
+
+        private static async Task CreateTriggerIfNotExistsAsync(DocumentCollection collection)
+        {
+            string triggersLink = collection.TriggersLink;
+            const string TriggerName = "createDate";
+
+            Trigger trigger = client.CreateTriggerQuery(triggersLink)
+                                    .Where(sp => sp.Id == TriggerName)
+                                    .AsEnumerable()
+                                    .FirstOrDefault();
+
+            if (trigger == null)
+            {
+                // Register a pre-trigger
+                trigger = new Trigger
+                {
+                    Id = TriggerName,
+                    Body = System.IO.File.ReadAllText(Path.Combine(Config.ContentRootPath, @"Data\Triggers\createDate.js")),
+                    TriggerOperation = TriggerOperation.Create,
+                    TriggerType = TriggerType.Pre
+                };
+
+                await client.CreateTriggerAsync(triggersLink, trigger);
             }
         }
     }
