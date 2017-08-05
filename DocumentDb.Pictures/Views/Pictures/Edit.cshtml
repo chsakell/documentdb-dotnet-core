@@ -31,16 +31,7 @@
                 @Html.DropDownList("Category")
             </div>
         </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Approved, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                <div class="checkbox">
-                    @Html.EditorFor(model => model.Approved)
-                    @Html.ValidationMessageFor(model => model.Approved, "", new { @class = "text-danger" })
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
+         <div class="form-group">
             <label class="control-label col-md-2"></label>
             <div class="col-md-10">
                 <img src="@ViewBag.Image" width="250" height="250" />

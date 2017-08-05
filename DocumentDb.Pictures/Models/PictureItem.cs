@@ -15,9 +15,6 @@
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
 
-        [JsonProperty(PropertyName = "isApproved")]
-        public bool Approved { get; set; }
-
         [JsonProperty(PropertyName = "category")]
         public string Category { get; set; }
 

@@ -18,6 +18,7 @@
         private static readonly string DatabaseId = "Gallery";
         private static readonly string CollectionId = "Pictures";
         private static DocumentClient client;
+        private static DocumentCollection collection;
 
         public static async Task<T> GetItemAsync(string id)
         {
@@ -62,6 +63,22 @@
                     throw;
                 }
             }
+        }
+
+        public static async Task<IEnumerable<T>> GetItemsAsync()
+        {
+            IDocumentQuery<T> query = client.CreateDocumentQuery<T>(
+                UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId),
+                new FeedOptions { MaxItemCount = -1, EnableCrossPartitionQuery = true })
+                .AsDocumentQuery();
+
+            List<T> results = new List<T>();
+            while (query.HasMoreResults)
+            {
+                results.AddRange(await query.ExecuteNextAsync<T>());
+            }
+
+            return results;
         }
 
         public static async Task<IEnumerable<T>> GetItemsAsync(Expression<Func<T, bool>> predicate)
@@ -121,12 +138,23 @@
             return await client.ReadAttachmentAsync(attachmentLink, new RequestOptions() { PartitionKey = new PartitionKey(partitionkey) });
         }
 
+        public static async Task<StoredProcedureResponse<dynamic>> ExecuteStoredProcedureAsync(string procedureName, string query, string partitionKey)
+        {
+            StoredProcedure storedProcedure = client.CreateStoredProcedureQuery(collection.StoredProceduresLink)
+                                    .Where(sp => sp.Id == procedureName)
+                                    .AsEnumerable()
+                                    .FirstOrDefault();
+
+            return await client.ExecuteStoredProcedureAsync<dynamic>(storedProcedure.SelfLink, new RequestOptions { PartitionKey = new PartitionKey(partitionKey) }, query);
+        }
+
         public static void Initialize()
         {
             client = new DocumentClient(new Uri(Endpoint), Key);
             CreateDatabaseIfNotExistsAsync().Wait();
-            DocumentCollection documentCollection = CreateCollectionIfNotExistsAsync("category").Result;
-            CreateTriggerIfNotExistsAsync(documentCollection).Wait();
+            collection = CreateCollectionIfNotExistsAsync("category").Result;
+            CreateTriggerIfNotExistsAsync(collection).Wait();
+            CreateStoredProcedureIfNotExistsAsync(collection).Wait();
         }
 
         private static async Task CreateDatabaseIfNotExistsAsync()
@@ -169,7 +197,8 @@
                     {
                         return await client.CreateDocumentCollectionAsync(
                             UriFactory.CreateDatabaseUri(DatabaseId),
-                            new DocumentCollection {
+                            new DocumentCollection
+                            {
                                 Id = CollectionId,
                                 PartitionKey = new PartitionKeyDefinition
                                 {
@@ -203,12 +232,35 @@
                 trigger = new Trigger
                 {
                     Id = TriggerName,
-                    Body = System.IO.File.ReadAllText(Path.Combine(Config.ContentRootPath, @"Data\Triggers\createDate.js")),
+                    Body = File.ReadAllText(Path.Combine(Config.ContentRootPath, @"Data\Triggers\createDate.js")),
                     TriggerOperation = TriggerOperation.Create,
                     TriggerType = TriggerType.Pre
                 };
 
                 await client.CreateTriggerAsync(triggersLink, trigger);
+            }
+        }
+
+        private static async Task CreateStoredProcedureIfNotExistsAsync(DocumentCollection collection)
+        {
+            string storedProceduresLink = collection.StoredProceduresLink;
+            const string StoredProcedureName = "bulkDelete";
+
+            StoredProcedure storedProcedure = client.CreateStoredProcedureQuery(storedProceduresLink)
+                                    .Where(sp => sp.Id == StoredProcedureName)
+                                    .AsEnumerable()
+                                    .FirstOrDefault();
+
+            if (storedProcedure == null)
+            {
+                // Register a stored procedure
+                storedProcedure = new StoredProcedure
+                {
+                    Id = StoredProcedureName,
+                    Body = File.ReadAllText(Path.Combine(Config.ContentRootPath, @"Data\StoredProcedures\bulkDelete.js"))
+                };
+                storedProcedure = await client.CreateStoredProcedureAsync(storedProceduresLink,
+            storedProcedure);
             }
         }
     }

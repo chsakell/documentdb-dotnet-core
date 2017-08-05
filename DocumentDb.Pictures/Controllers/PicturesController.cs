@@ -30,7 +30,7 @@
         [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
-            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync(d => d.Approved);
+            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
             return View(items);
         }
 
@@ -47,7 +47,7 @@
         [HttpPost]
         [ActionName("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Approved,Category")] PictureItem item, IFormFile file)
+        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Category")] PictureItem item, IFormFile file)
         {
             if (ModelState.IsValid)
             {
@@ -64,6 +64,70 @@
                 }
 
                 return RedirectToAction("Index");
+            }
+
+            return View(item);
+        }
+
+        [ActionName("Details")]
+        public async Task<ActionResult> DetailsAsync(string id, string category)
+        {
+            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
+            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+
+            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+            var file = attachment.GetPropertyValue<byte[]>("file");
+
+            if (file != null)
+            {
+                string bytes = Convert.ToBase64String(file);
+                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
+            }
+            else
+            {
+                ViewBag.Image = string.Empty;
+            }
+
+            return View(item);
+        }
+
+        [ActionName("Edit")]
+        public async Task<ActionResult> EditAsync(string id, string category)
+        {
+            if (id == null)
+            {
+                return BadRequest();
+            }
+
+            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            FillCategories(category);
+
+            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
+
+            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+
+            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+            if (attachment != null)
+            {
+                var file = attachment.GetPropertyValue<byte[]>("file");
+
+                if (file != null)
+                {
+                    string bytes = Convert.ToBase64String(file);
+                    ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
+                }
+            }
+            else
+            {
+                ViewBag.Image = string.Empty;
             }
 
             return View(item);
@@ -107,43 +171,7 @@
             return View(item);
         }
 
-        [ActionName("Edit")]
-        public async Task<ActionResult> EditAsync(string id, string category)
-        {
-            if (id == null)
-            {
-                return BadRequest();
-            }
-
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
-            if (item == null)
-            {
-                return NotFound();
-            }
-
-            FillCategories(category);
-
-            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
-
-            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-
-            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
-
-            var file = attachment.GetPropertyValue<byte[]>("file");
-
-            if (file != null)
-            {
-                string bytes = Convert.ToBase64String(file);
-                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
-            }
-            else
-            {
-                ViewBag.Image = string.Empty;
-            }
-
-            return View(item);
-        }
-
+        
         [ActionName("Delete")]
         public async Task<ActionResult> DeleteAsync(string id, string category)
         {
@@ -161,6 +189,8 @@
             return View(item);
         }
 
+        
+
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -170,28 +200,31 @@
             return RedirectToAction("Index");
         }
 
-        [ActionName("Details")]
-        public async Task<ActionResult> DetailsAsync(string id, string category)
+        [ActionName("DeleteAll")]
+        public ActionResult DeleteAll()
         {
-            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+            Categories.Add("All");
+            FillCategories("All");
+            return View();
+        }
 
-            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
-
-            var file = attachment.GetPropertyValue<byte[]>("file");
-
-            if (file != null)
+        [HttpPost]
+        [ActionName("DeleteAll")]
+        public async Task<ActionResult> DeleteAllAsync(string category)
+        {
+            if (category != "All")
             {
-                string bytes = Convert.ToBase64String(file);
-                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
+                var response = await DocumentDBRepository<PictureItem>.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
             }
             else
             {
-                ViewBag.Image = string.Empty;
+                foreach(string cat in Categories)
+                {
+                    await DocumentDBRepository<PictureItem>.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat);
+                }
             }
 
-            return View(item);
+            return RedirectToAction("Index");
         }
 
         private void FillCategories(string selectedCategory = null)
