@@ -27,10 +27,42 @@ textarea {
     width: 100%;
 }
 
+.picture-item {
+    position:relative;
+}
+
+.picture-item hr {
+    margin: 5px 0;
+}
+
 /* Hide/rearrange for smaller screens */
 @media screen and (max-width: 767px) {
     /* Hide captions */
     .carousel-caption {
+        display: none;
+    }
+}
+
+
+@media (min-width: 768px) {
+    .picture-item .thumbnail > img, .thumbnail a > img {
+        height: 118px;
+    }
+}
+
+@media (min-width: 992px) {
+    .picture-item .thumbnail > img, .thumbnail a > img {
+        height: 150px;
+    }
+
+    .picture-item:hover .caption {
+        display: block !important;
+    }
+
+    .picture-item .thumbnail .caption {
+        position: absolute;
+        top: 80px;
+        color: white;
         display: none;
     }
 }

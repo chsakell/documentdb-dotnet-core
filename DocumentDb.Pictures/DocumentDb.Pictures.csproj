@@ -44,6 +44,8 @@
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.3.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="1.1.2" />
+    <PackageReference Include="Sakura.AspNetCore.Mvc.PagedList" Version="2.0.12" />
+    <PackageReference Include="Sakura.AspNetCore.PagedList" Version="2.0.2" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.1" />

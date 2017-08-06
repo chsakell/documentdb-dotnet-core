@@ -1,41 +1,30 @@
-﻿@model IEnumerable<DocumentDb.Pictures.Models.PictureItem>
+﻿@using Sakura.AspNetCore;
+@model IPagedList<DocumentDb.Pictures.Models.PictureItem>
 
 @{
-    ViewBag.Title = "List of To-Do Items";
+    ViewBag.Title = "Galery";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>List of To-Do Items</h2>
+<div class="row">
+    @foreach (var picture in Model)
+    {
+        <div class="col-sm-4 col-md-3 picture-item">
+            <bootstrap-thumbnail>
+                @await Component.InvokeAsync("PictureItemImage", new { item = picture })
+                <div class="caption">
+                    <div>@picture.Title</div>
+                    <hr/>
+                    <div>
+                        <a class="btn btn-default btn-sm" asp-controller="Pictures" asp-action="Edit" asp-route-id="@picture.Id" asp-route-category="@picture.Category">Edit</a>
+                        &nbsp;&nbsp;
+                        <a class="btn btn-danger btn-sm" asp-controller="Pictures" asp-action="Edit" asp-route-id="@picture.Id" asp-route-category="@picture.Category">Delete</a>
+                    </div>
+                </div>
+            </bootstrap-thumbnail>
+        </div>
+    }
+</div>
 
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.Title)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Category)
-        </th>
-        <th></th>
-    </tr>
+<pager />
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Title)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Category)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.Id, category = item.Category }) |
-            @Html.ActionLink("Details", "Details", new { id=item.Id, category=item.Category }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.Id, category=item.Category })
-        </td>
-    </tr>
-}
-
-</table>
-
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>

@@ -2,8 +2,6 @@
 {
     using System.Net;
     using System.Threading.Tasks;
-    //using System.Web.Mvc;
-    //using Models;
     using Microsoft.AspNetCore.Mvc;
     using Models;
     using Microsoft.AspNetCore.Mvc.Rendering;
@@ -13,6 +11,7 @@
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
     using System;
+    using Sakura.AspNetCore;
 
     public class PicturesController : Controller
     {
@@ -28,10 +27,11 @@
         }
 
         [ActionName("Index")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 8)
         {
+
             var items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
-            return View(items);
+            return View(items.ToPagedList(pageSize, page));
         }
 
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DocumentDb.Pictures.Models;
+using Sakura.AspNetCore.Mvc;
 
 namespace DocumentDb.Pictures
 {
@@ -33,6 +34,13 @@ namespace DocumentDb.Pictures
         {
             // Add framework services.
             services.AddMvc();
+
+            // Add default bootstrap-styled pager implementation
+            services.AddBootstrapPagerGenerator(options =>
+            {
+                // Use default pager options.
+                options.ConfigureDefault();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
