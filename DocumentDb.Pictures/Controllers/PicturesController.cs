@@ -47,7 +47,7 @@
         [HttpPost]
         [ActionName("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Description,Category")] PictureItem item, IFormFile file)
+        public async Task<ActionResult> CreateAsync([Bind("Id,Title,Category")] PictureItem item, IFormFile file)
         {
             if (ModelState.IsValid)
             {

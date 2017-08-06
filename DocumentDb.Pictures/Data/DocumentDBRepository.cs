@@ -10,6 +10,7 @@
     using Microsoft.Azure.Documents.Linq;
     using System.Collections.ObjectModel;
     using System.IO;
+    using DocumentDb.Pictures.Models;
 
     public static class DocumentDBRepository<T> where T : class
     {
@@ -153,8 +154,9 @@
             client = new DocumentClient(new Uri(Endpoint), Key);
             CreateDatabaseIfNotExistsAsync().Wait();
             collection = CreateCollectionIfNotExistsAsync("category").Result;
-            CreateTriggerIfNotExistsAsync(collection).Wait();
-            CreateStoredProcedureIfNotExistsAsync(collection).Wait();
+            CreateTriggerIfNotExistsAsync().Wait();
+            CreateStoredProcedureIfNotExistsAsync().Wait();
+            InitGalleryAsync().Wait();
         }
 
         private static async Task CreateDatabaseIfNotExistsAsync()
@@ -216,7 +218,7 @@
             }
         }
 
-        private static async Task CreateTriggerIfNotExistsAsync(DocumentCollection collection)
+        private static async Task CreateTriggerIfNotExistsAsync()
         {
             string triggersLink = collection.TriggersLink;
             const string TriggerName = "createDate";
@@ -241,7 +243,7 @@
             }
         }
 
-        private static async Task CreateStoredProcedureIfNotExistsAsync(DocumentCollection collection)
+        private static async Task CreateStoredProcedureIfNotExistsAsync()
         {
             string storedProceduresLink = collection.StoredProceduresLink;
             const string StoredProcedureName = "bulkDelete";
@@ -261,6 +263,40 @@
                 };
                 storedProcedure = await client.CreateStoredProcedureAsync(storedProceduresLink,
             storedProcedure);
+            }
+        }
+
+        private static async Task InitGalleryAsync()
+        {
+            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
+            if (items.Count() == 0)
+            {
+                foreach (var directory in Directory.GetDirectories(Path.Combine(Config.ContentRootPath, @"wwwroot\images\gallery")))
+                {
+                    foreach (var filePath in Directory.GetFiles(directory))
+                    {
+                        string category = Path.GetFileName(Path.GetDirectoryName(filePath));
+                        string title = Path.GetFileNameWithoutExtension(filePath);
+                        string fileName = Path.GetFileName(filePath);
+                        string contentType;
+
+                        PictureItem item = new PictureItem()
+                        {
+                            Category = category,
+                            Title = title
+                        };
+
+                        RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
+                        Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item, options);
+
+                        new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider().TryGetContentType(fileName, out contentType);
+                        var attachment = new Attachment { ContentType = contentType, Id = "wallpaper", MediaLink = string.Empty };
+                        var input = new byte[File.OpenRead(filePath).Length];
+                        File.OpenRead(filePath).Read(input, 0, input.Length);
+                        attachment.SetPropertyValue("file", input);
+                        ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    }
+                }
             }
         }
     }

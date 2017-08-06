@@ -7,7 +7,36 @@
   <PropertyGroup>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wp8+wpa81;</PackageTargetFallback>
   </PropertyGroup>
+
   <ItemGroup>
+    <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Abstract Tree.jpg" />
+    <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Blue Vector.jpg" />
+    <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Goosebumps.jpg" />
+    <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Triangles.jpg" />
+    <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Violet Yellow.jpg" />
+    <Content Include="wwwroot\images\gallery\Anime\Death Note.jpg" />
+    <Content Include="wwwroot\images\gallery\Anime\Girl Alone Bench Blue Sky.jpg" />
+    <Content Include="wwwroot\images\gallery\Anime\Gohan Dragon.jpg" />
+    <Content Include="wwwroot\images\gallery\Anime\Naruto.jpg" />
+    <Content Include="wwwroot\images\gallery\Anime\Revy Black.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Mars Astronaut.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Pretty Girl.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Spiral Silhouette.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Starwars.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Valentine.jpg" />
+    <Content Include="wwwroot\images\gallery\Creative Graphics\Wolverine.jpg" />
+    <Content Include="wwwroot\images\gallery\Digital Universe\Carina Nebula.jpg" />
+    <Content Include="wwwroot\images\gallery\Digital Universe\Nebula Artwork.jpg" />
+    <Content Include="wwwroot\images\gallery\Digital Universe\Nebula Dark.jpg" />
+    <Content Include="wwwroot\images\gallery\Digital Universe\Powerful Megaflares.jpg" />
+    <Content Include="wwwroot\images\gallery\Nature\Beach.jpg" />
+    <Content Include="wwwroot\images\gallery\Nature\Beautiful Lake.jpg" />
+    <Content Include="wwwroot\images\gallery\Nature\Ocean Waves.jpg" />
+    <Content Include="wwwroot\images\gallery\Nature\River Scenery.jpg" />
+    <Content Include="wwwroot\images\gallery\Nature\Supermoon.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="jQWidgets.AspNetCore.Mvc.Bootstrap.TagHelpers" Version="1.0.6" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.3" />
