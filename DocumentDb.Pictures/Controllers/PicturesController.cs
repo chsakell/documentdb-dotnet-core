@@ -49,7 +49,7 @@
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateAsync([Bind("Id,Title,Category")] PictureItem item, IFormFile file)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid & file != null)
             {
                 RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
                 Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item, options);
@@ -66,7 +66,9 @@
                 return RedirectToAction("Index");
             }
 
-            return View(item);
+            FillCategories();
+            ViewBag.FileRequired = true;
+            return View();
         }
 
         [ActionName("Details")]
@@ -170,26 +172,6 @@
 
             return View(item);
         }
-
-        
-        [ActionName("Delete")]
-        public async Task<ActionResult> DeleteAsync(string id, string category)
-        {
-            if (id == null)
-            {
-                return BadRequest();
-            }
-
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
-            if (item == null)
-            {
-                return NotFound();
-            }
-
-            return View(item);
-        }
-
-        
 
         [HttpPost]
         [ActionName("Delete")]

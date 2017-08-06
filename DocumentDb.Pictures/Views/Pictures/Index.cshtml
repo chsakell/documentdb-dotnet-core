@@ -9,20 +9,7 @@
 <div class="row">
     @foreach (var picture in Model)
     {
-        <div class="col-sm-4 col-md-3 picture-item">
-            <bootstrap-thumbnail>
-                @await Component.InvokeAsync("PictureItemImage", new { item = picture })
-                <div class="caption">
-                    <div>@picture.Title</div>
-                    <hr/>
-                    <div>
-                        <a class="btn btn-default btn-sm" asp-controller="Pictures" asp-action="Edit" asp-route-id="@picture.Id" asp-route-category="@picture.Category">Edit</a>
-                        &nbsp;&nbsp;
-                        <a class="btn btn-danger btn-sm" asp-controller="Pictures" asp-action="Edit" asp-route-id="@picture.Id" asp-route-category="@picture.Category">Delete</a>
-                    </div>
-                </div>
-            </bootstrap-thumbnail>
-        </div>
+        @await Component.InvokeAsync("PictureItem", new { item = picture })
     }
 </div>
 
