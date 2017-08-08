@@ -206,7 +206,11 @@
                 }
             }
 
-            return RedirectToAction("Index");
+            Categories.Add("All");
+            FillCategories("All");
+            ViewBag.CategoryRemoved = category;
+
+            return View();
         }
 
         private void FillCategories(string selectedCategory = null)

@@ -4,22 +4,38 @@
 @{
 }
 
-<h3>Are you sure you want to delete all items?</h3>
+@if (ViewBag.CategoryRemoved != null)
+{
+    <bootstrap-alert class="alert-success alert-dismissible fade in">
+        <bootstrap-alert-close><span aria-hidden="true">×</span></bootstrap-alert-close>
+        Pictures from "@ViewBag.CategoryRemoved" category have been removed.  
+    </bootstrap-alert>
+}
+
+<bootstrap-alert class="alert-danger alert-dismissible fade in">
+    <bootstrap-alert-close><span aria-hidden="true">×</span></bootstrap-alert-close>
+    <strong>Attention!</strong> Select a category to remove.
+</bootstrap-alert>
 
 <div>
     @using (Html.BeginForm())
     {
         @Html.AntiForgeryToken()
 
-        <div class="form-group">
-            <label class="control-label col-md-2"></label>
-            <div class="col-md-10">
-                @Html.DropDownList("Category")
+        <div class="form-horizontal">
+            <hr />
+            <div class="form-group">
+                @Html.Label(null, "Select category", htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-4">
+                    <select name="category" class="form-control"
+                            asp-items="ViewBag.Category"></select>
+                </div>
             </div>
-        </div>
-
-        <div class="form-actions no-color">
-            <input type="submit" value="Delete" class="btn btn-default" /> |
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-4">
+                    <input type="submit" value="Save" class="btn btn-danger" />
+                </div>
+            </div>
         </div>
     }
 </div>

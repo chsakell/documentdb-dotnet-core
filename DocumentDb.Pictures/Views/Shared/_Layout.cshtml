@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DocumentDb.Pictures</title>
+    <title>CosmosDb Gallery</title>
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -21,26 +21,6 @@
     @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
 <body>
-    @*<nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">DocumentDb.Pictures</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Pictures" asp-action="Index">Pictures</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>*@
     <bootstrap-nav-bar>
         <bootstrap-nav-bar-header>
             <bootstrap-button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" autocomplete="off">
@@ -60,8 +40,6 @@
                         <bootstrap-dropdown-menu labelledby="newDropDown1a">
                             <bootstrap-dropdown-menu-item><a asp-controller="Pictures" asp-action="Create">Create new</a></bootstrap-dropdown-menu-item>
                             <bootstrap-dropdown-menu-item><a asp-controller="Pictures" asp-action="DeleteAll">Remove all</a></bootstrap-dropdown-menu-item>
-                            <bootstrap-dropdown-menu-separator></bootstrap-dropdown-menu-separator>
-                            <bootstrap-dropdown-menu-item><a href="#">Separated link</a></bootstrap-dropdown-menu-item>
                         </bootstrap-dropdown-menu>
                     </bootstrap-dropdown>
                 </bootstrap-nav-item>
