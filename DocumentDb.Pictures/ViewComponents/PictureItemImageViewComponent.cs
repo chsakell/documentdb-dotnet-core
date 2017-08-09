@@ -32,7 +32,7 @@ namespace DocumentDb.Pictures.ViewComponents
                 image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
             }
 
-            return View((object)image);
+            return View(new ImageVM() { Id = "img-" + item.Id, Src = image });
         }
     }
 }

@@ -65,7 +65,7 @@ namespace DocumentDb.Pictures
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Pictures}/{action=Index}/{id?}");
             });
 
             DocumentDBRepository<PictureItem>.Initialize();

@@ -6,6 +6,14 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@if (ViewBag.Message != null)
+{
+    <bootstrap-alert class="alert-success alert-dismissible fade in">
+        <bootstrap-alert-close><span aria-hidden="true">×</span></bootstrap-alert-close>
+        @ViewBag.Message 
+    </bootstrap-alert>
+}
+
 <div class="row">
     @foreach (var picture in Model)
     {

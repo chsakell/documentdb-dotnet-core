@@ -1,3 +1,5 @@
-﻿@model String
+﻿@model DocumentDb.Pictures.Models.ImageVM
 
-<img src="@Model" width="100%" alt="asd" />
+<a href="@Model.Src"  data-lightbox="gallery">
+    <img src="@Model.Src" id="@Model.Id" width="100%" alt="" />
+</a>

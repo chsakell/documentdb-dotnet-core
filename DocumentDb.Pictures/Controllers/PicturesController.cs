@@ -27,10 +27,18 @@
         }
 
         [ActionName("Index")]
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 8)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 8, string filter = null)
         {
+            IEnumerable<PictureItem> items;
 
-            var items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
+            if (string.IsNullOrEmpty(filter))
+                items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
+            else
+            {
+                items = await DocumentDBRepository<PictureItem>
+                    .GetItemsAsync(picture => picture.Title.ToLower().Contains(filter.Trim().ToLower()));
+                ViewBag.Message = "We found " + (items as ICollection<PictureItem>).Count + " pictures for term " + filter.Trim();
+            }
             return View(items.ToPagedList(pageSize, page));
         }
 

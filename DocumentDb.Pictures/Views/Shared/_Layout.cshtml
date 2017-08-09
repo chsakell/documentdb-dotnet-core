@@ -10,13 +10,15 @@
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" />
         <link rel="stylesheet" href="~/css/bootstrap.mvc.css" />
+        <link href="~/lib/lightbox/css/lightbox.css" rel="stylesheet" />
     </environment>
     <environment names="Staging,Production">
         <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-        <link rel="stylesheet" href="~/css/bootstrap.mvc.css" asp-append-version="true"/>
+        <link rel="stylesheet" href="~/css/bootstrap.mvc.css" asp-append-version="true" />
+        <link href="~/lib/lightbox/css/lightbox.min.css" rel="stylesheet" />
     </environment>
     @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
@@ -29,11 +31,10 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </bootstrap-button>
-            <a class="navbar-brand" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="navbar-brand active" asp-controller="Pictures" asp-action="Index">Gallery</a>
         </bootstrap-nav-bar-header>
         <bootstrap-nav-bar-collapse class="navbar-collapse collapse">
             <bootstrap-nav class="navbar-nav">
-                <bootstrap-nav-item class="active"><a asp-controller="Pictures" asp-action="Index">Gallery</a></bootstrap-nav-item>
                 <bootstrap-nav-item class="dropdown">
                     <bootstrap-dropdown class="dropdown">
                         <bootstrap-dropdown-label id="newDropDown1a" class="btn btn-default" content="Actions "></bootstrap-dropdown-label>
@@ -45,11 +46,13 @@
                 </bootstrap-nav-item>
                 <bootstrap-nav-item><a href="#">About</a></bootstrap-nav-item>
             </bootstrap-nav>
-            <form class="navbar-form navbar-left" role="search">
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Search">
-                </div>
-            </form>
+            @using (Html.BeginForm("Index", "Pictures", FormMethod.Get, new { @class = "navbar-form navbar-left", role = "search" }))
+            {
+                @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <input name="filter" type="text" class="form-control" placeholder="Search image..">
+                    </div>
+            }
             <bootstrap-nav class="navbar-nav navbar-right">
                 <bootstrap-nav-item class="dropdown">
                     <bootstrap-dropdown class="dropdown">
@@ -79,6 +82,7 @@
 
         <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
         <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+        <script src="~/lib/lightbox/js/lightbox.js"></script>
     </environment>
     <environment names="Staging,Production">
         <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
@@ -96,8 +100,10 @@
         <script src="~/js/site.min.js" asp-append-version="true"></script>
         <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
         <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+        <script src="~/lib/lightbox/js/lightbox.min.js"></script>
     </environment>
 
     @RenderSection("Scripts", required: false)
+
 </body>
 </html>

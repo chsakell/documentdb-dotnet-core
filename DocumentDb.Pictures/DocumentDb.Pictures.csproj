@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="wwwroot\css\jquery.fancybox.min.css" />
     <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Abstract Tree.jpg" />
     <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Blue Vector.jpg" />
     <Content Include="wwwroot\images\gallery\3D &amp; Abstract\Goosebumps.jpg" />
@@ -34,6 +35,18 @@
     <Content Include="wwwroot\images\gallery\Nature\Ocean Waves.jpg" />
     <Content Include="wwwroot\images\gallery\Nature\River Scenery.jpg" />
     <Content Include="wwwroot\images\gallery\Nature\Supermoon.jpg" />
+    <Content Include="wwwroot\lib\lightbox\css\lightbox.css" />
+    <Content Include="wwwroot\lib\lightbox\css\lightbox.min.css" />
+    <Content Include="wwwroot\lib\lightbox\images\close.png" />
+    <Content Include="wwwroot\lib\lightbox\images\loading.gif" />
+    <Content Include="wwwroot\lib\lightbox\images\next.png" />
+    <Content Include="wwwroot\lib\lightbox\images\prev.png" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox-plus-jquery.js" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox-plus-jquery.min.js" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox-plus-jquery.min.map" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox.js" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox.min.js" />
+    <Content Include="wwwroot\lib\lightbox\js\lightbox.min.map" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="jQWidgets.AspNetCore.Mvc.Bootstrap.TagHelpers" Version="1.0.6" />
