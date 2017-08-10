@@ -12,13 +12,17 @@
     using Microsoft.Azure.Documents.Client;
     using System;
     using Sakura.AspNetCore;
+    using DocumentDb.Pictures.Data;
 
     public class PicturesController : Controller
     {
         private List<string> Categories;
+        private IDocumentDBRepository<PictureItem> picturesRepository;
 
-        public PicturesController()
+        public PicturesController(IDocumentDBRepository<PictureItem> picturesRepository)
         {
+            this.picturesRepository = picturesRepository;
+
             this.Categories = new List<string>()
             {
                 "3D & Abstract", "Animals & Birds", "Anime", "Beach","Bikes", "Cars","Celebrations", "Celebrities","Christmas", "Creative Graphics","Cute", "Digital Universe","Dreamy & Fantasy", "Flowers","Games", "Inspirational","Love", "Military",
@@ -29,13 +33,14 @@
         [ActionName("Index")]
         public async Task<IActionResult> Index(int page = 1, int pageSize = 8, string filter = null)
         {
+            await this.picturesRepository.InitAsync("Pictures");
             IEnumerable<PictureItem> items;
 
             if (string.IsNullOrEmpty(filter))
-                items = await DocumentDBRepository<PictureItem>.GetItemsAsync();
+                items = await this.picturesRepository.GetItemsAsync();
             else
             {
-                items = await DocumentDBRepository<PictureItem>
+                items = await this.picturesRepository
                     .GetItemsAsync(picture => picture.Title.ToLower().Contains(filter.Trim().ToLower()));
                 ViewBag.Message = "We found " + (items as ICollection<PictureItem>).Count + " pictures for term " + filter.Trim();
             }
@@ -59,8 +64,11 @@
         {
             if (ModelState.IsValid & file != null)
             {
+                await this.picturesRepository.InitAsync("Pictures");
+
                 RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
-                Document document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item, options);
+
+                Document document = await this.picturesRepository.CreateItemAsync(item, options);
 
                 if (file != null)
                 {
@@ -68,7 +76,7 @@
                     var input = new byte[file.OpenReadStream().Length];
                     file.OpenReadStream().Read(input, 0, input.Length);
                     attachment.SetPropertyValue("file", input);
-                    ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                 }
 
                 return RedirectToAction("Index");
@@ -79,30 +87,6 @@
             return View();
         }
 
-        [ActionName("Details")]
-        public async Task<ActionResult> DetailsAsync(string id, string category)
-        {
-            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
-
-            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
-
-            var file = attachment.GetPropertyValue<byte[]>("file");
-
-            if (file != null)
-            {
-                string bytes = Convert.ToBase64String(file);
-                ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
-            }
-            else
-            {
-                ViewBag.Image = string.Empty;
-            }
-
-            return View(item);
-        }
-
         [ActionName("Edit")]
         public async Task<ActionResult> EditAsync(string id, string category)
         {
@@ -111,7 +95,9 @@
                 return BadRequest();
             }
 
-            PictureItem item = await DocumentDBRepository<PictureItem>.GetItemAsync(id, category);
+            await this.picturesRepository.InitAsync("Pictures");
+
+            PictureItem item = await this.picturesRepository.GetItemAsync(id, category);
             if (item == null)
             {
                 return NotFound();
@@ -119,11 +105,11 @@
 
             FillCategories(category);
 
-            Document document = await DocumentDBRepository<Document>.GetItemAsync(id, category);
+            Document document = await this.picturesRepository.GetDocumentAsync(id, category);
 
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
 
-            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+            Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
             if (attachment != null)
             {
@@ -150,29 +136,39 @@
         {
             if (ModelState.IsValid)
             {
+                await this.picturesRepository.InitAsync("Pictures");
+
                 Document document = null;
 
                 if (item.Category == oldCategory)
                 {
-                    document = await DocumentDBRepository<PictureItem>.UpdateItemAsync(item.Id, item);
+                    document = await this.picturesRepository.UpdateItemAsync(item.Id, item);
+
+                    if (file != null)
+                    {
+                        var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
+                        Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+
+                        var input = new byte[file.OpenReadStream().Length];
+                        file.OpenReadStream().Read(input, 0, input.Length);
+                        attachment.SetPropertyValue("file", input);
+                        ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.ReplaceAttachmentAsync(attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    }
                 }
                 else
                 {
-                    await DocumentDBRepository<PictureItem>.DeleteItemAsync(item.Id, oldCategory);
-                    document = await DocumentDBRepository<PictureItem>.CreateItemAsync(item);
-                    
-                }
+                    await this.picturesRepository.DeleteItemAsync(item.Id, oldCategory);
 
-                if (file != null)
-                {
-                    var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-                    Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+                    document = await this.picturesRepository.CreateItemAsync(item);
 
-                    //var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
-                    var input = new byte[file.OpenReadStream().Length];
-                    file.OpenReadStream().Read(input, 0, input.Length);
-                    attachment.SetPropertyValue("file", input);
-                    ResourceResponse<Attachment> createdAttachment = await DocumentDBRepository<PictureItem>.ReplaceAttachmentAsync(attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    if (file != null)
+                    {
+                        var attachment = new Attachment { ContentType = file.ContentType, Id = "wallpaper", MediaLink = string.Empty };
+                        var input = new byte[file.OpenReadStream().Length];
+                        file.OpenReadStream().Read(input, 0, input.Length);
+                        attachment.SetPropertyValue("file", input);
+                        ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    }
                 }
 
                 return RedirectToAction("Index");
@@ -186,7 +182,10 @@
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmedAsync([Bind("Id, Category")] string id, string category)
         {
-            await DocumentDBRepository<PictureItem>.DeleteItemAsync(id, category);
+            await this.picturesRepository.InitAsync("Pictures");
+
+            await this.picturesRepository.DeleteItemAsync(id, category);
+
             return RedirectToAction("Index");
         }
 
@@ -202,9 +201,11 @@
         [ActionName("DeleteAll")]
         public async Task<ActionResult> DeleteAllAsync(string category)
         {
+            await this.picturesRepository.InitAsync("Pictures");
+
             if (category != "All")
             {
-                var response = await DocumentDBRepository<PictureItem>.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
+                var response = await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
             }
             else
             {

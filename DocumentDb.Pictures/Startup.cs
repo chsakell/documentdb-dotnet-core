@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DocumentDb.Pictures.Models;
 using Sakura.AspNetCore.Mvc;
+using DocumentDb.Pictures.Data;
 
 namespace DocumentDb.Pictures
 {
@@ -32,6 +33,8 @@ namespace DocumentDb.Pictures
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Repositories
+            services.AddScoped<IDocumentDBRepository<PictureItem>, GalleryDBRepository>();
             // Add framework services.
             services.AddMvc();
 
