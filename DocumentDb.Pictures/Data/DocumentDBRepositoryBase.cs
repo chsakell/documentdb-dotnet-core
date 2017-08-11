@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DocumentDb.Pictures.Data
 {
-    public abstract class DocumentDBRepositoryBase<T> : IDocumentDBRepository<T> where T : class
+    public abstract class DocumentDBRepositoryBase<DatabaseDB> : IDocumentDBRepository<DatabaseDB>
     {
         #region Repository Configuration
 
@@ -27,7 +27,7 @@ namespace DocumentDb.Pictures.Data
 
         }
 
-        public async Task<T> GetItemAsync(string id)
+        public async Task<T> GetItemAsync<T>(string id) where T: class
         {
             try
             {
@@ -67,7 +67,7 @@ namespace DocumentDb.Pictures.Data
             }
         }
 
-        public async Task<T> GetItemAsync(string id, string partitionKey)
+        public async Task<T> GetItemAsync<T>(string id, string partitionKey) where T : class
         {
             try
             {
@@ -87,7 +87,7 @@ namespace DocumentDb.Pictures.Data
             }
         }
 
-        public async Task<IEnumerable<T>> GetItemsAsync()
+        public async Task<IEnumerable<T>> GetItemsAsync<T>() where T : class
         {
             IDocumentQuery<T> query = client.CreateDocumentQuery<T>(
                 UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId),
@@ -103,7 +103,7 @@ namespace DocumentDb.Pictures.Data
             return results;
         }
 
-        public async Task<IEnumerable<T>> GetItemsAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> GetItemsAsync<T>(Expression<Func<T, bool>> predicate) where T : class
         {
             IDocumentQuery<T> query = client.CreateDocumentQuery<T>(
                 UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId),
@@ -120,17 +120,17 @@ namespace DocumentDb.Pictures.Data
             return results;
         }
 
-        public async Task<Document> CreateItemAsync(T item)
+        public async Task<Document> CreateItemAsync<T>(T item) where T : class
         {
             return await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item);
         }
 
-        public async Task<Document> CreateItemAsync(T item, RequestOptions options)
+        public async Task<Document> CreateItemAsync<T>(T item, RequestOptions options) where T : class
         {
             return await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item, options);
         }
 
-        public async Task<Document> UpdateItemAsync(string id, T item)
+        public async Task<Document> UpdateItemAsync<T>(string id, T item) where T : class
         {
             return await client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), item);
         }

@@ -15,41 +15,36 @@
 
     public class PicturesController : Controller
     {
-        private IDocumentDBRepository<PictureItem> picturesRepository;
-        private IDocumentDBRepository<CategoryItem> categoriesRepository;
+        private IDocumentDBRepository<GalleryDBRepository> galleryRepository;
 
-        public PicturesController(IDocumentDBRepository<PictureItem> picturesRepository, IDocumentDBRepository<CategoryItem> categoriesRepository)
+        public PicturesController(IDocumentDBRepository<GalleryDBRepository> galleryRepository)
         {
-            this.picturesRepository = picturesRepository;
-            this.categoriesRepository = categoriesRepository;
+            this.galleryRepository = galleryRepository;
         }
 
         [ActionName("Index")]
         public async Task<IActionResult> Index(int page = 1, int pageSize = 8, string filter = null)
         {
-            await this.picturesRepository.InitAsync("Pictures");
+            await this.galleryRepository.InitAsync("Pictures");
             IEnumerable<PictureItem> items;
 
             if (string.IsNullOrEmpty(filter))
-                items = await this.picturesRepository.GetItemsAsync();
+                items = await this.galleryRepository.GetItemsAsync<PictureItem>();
             else
             {
-                items = await this.picturesRepository
-                    .GetItemsAsync(picture => picture.Title.ToLower().Contains(filter.Trim().ToLower()));
+                items = await this.galleryRepository
+                    .GetItemsAsync<PictureItem>(picture => picture.Title.ToLower().Contains(filter.Trim().ToLower()));
                 ViewBag.Message = "We found " + (items as ICollection<PictureItem>).Count + " pictures for term " + filter.Trim();
             }
             return View(items.ToPagedList(pageSize, page));
         }
 
-
-#pragma warning disable 1998
         [ActionName("Create")]
         public async Task<IActionResult> CreateAsync()
         {
-            FillCategories();
+            await FillCategoriesAsync();
             return View();
         }
-#pragma warning restore 1998
 
         [HttpPost]
         [ActionName("Create")]
@@ -58,11 +53,11 @@
         {
             if (ModelState.IsValid & file != null)
             {
-                await this.picturesRepository.InitAsync("Pictures");
+                await this.galleryRepository.InitAsync("Pictures");
 
                 RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
 
-                Document document = await this.picturesRepository.CreateItemAsync(item, options);
+                Document document = await this.galleryRepository.CreateItemAsync<PictureItem>(item, options);
 
                 if (file != null)
                 {
@@ -70,13 +65,14 @@
                     var input = new byte[file.OpenReadStream().Length];
                     file.OpenReadStream().Read(input, 0, input.Length);
                     attachment.SetPropertyValue("file", input);
-                    ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                    ResourceResponse<Attachment> createdAttachment = await this.galleryRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                 }
 
                 return RedirectToAction("Index");
             }
 
-            FillCategories();
+            await FillCategoriesAsync();
+
             ViewBag.FileRequired = true;
             return View();
         }
@@ -89,21 +85,21 @@
                 return BadRequest();
             }
 
-            await this.picturesRepository.InitAsync("Pictures");
+            await this.galleryRepository.InitAsync("Pictures");
 
-            PictureItem item = await this.picturesRepository.GetItemAsync(id, category);
+            PictureItem item = await this.galleryRepository.GetItemAsync<PictureItem>(id, category);
             if (item == null)
             {
                 return NotFound();
             }
 
-            FillCategories(category);
+            await FillCategoriesAsync(category);
 
-            Document document = await this.picturesRepository.GetDocumentAsync(id, category);
+            Document document = await this.galleryRepository.GetDocumentAsync(id, category);
 
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
 
-            Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+            Attachment attachment = await this.galleryRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
             if (attachment != null)
             {
@@ -130,30 +126,30 @@
         {
             if (ModelState.IsValid)
             {
-                await this.picturesRepository.InitAsync("Pictures");
+                await this.galleryRepository.InitAsync("Pictures");
 
                 Document document = null;
 
                 if (item.Category == oldCategory)
                 {
-                    document = await this.picturesRepository.UpdateItemAsync(item.Id, item);
+                    document = await this.galleryRepository.UpdateItemAsync(item.Id, item);
 
                     if (file != null)
                     {
                         var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-                        Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+                        Attachment attachment = await this.galleryRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
                         var input = new byte[file.OpenReadStream().Length];
                         file.OpenReadStream().Read(input, 0, input.Length);
                         attachment.SetPropertyValue("file", input);
-                        ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.ReplaceAttachmentAsync(attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                        ResourceResponse<Attachment> createdAttachment = await this.galleryRepository.ReplaceAttachmentAsync(attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                     }
                 }
                 else
                 {
-                    await this.picturesRepository.DeleteItemAsync(item.Id, oldCategory);
+                    await this.galleryRepository.DeleteItemAsync(item.Id, oldCategory);
 
-                    document = await this.picturesRepository.CreateItemAsync(item);
+                    document = await this.galleryRepository.CreateItemAsync(item);
 
                     if (file != null)
                     {
@@ -161,7 +157,7 @@
                         var input = new byte[file.OpenReadStream().Length];
                         file.OpenReadStream().Read(input, 0, input.Length);
                         attachment.SetPropertyValue("file", input);
-                        ResourceResponse<Attachment> createdAttachment = await this.picturesRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                        ResourceResponse<Attachment> createdAttachment = await this.galleryRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                     }
                 }
 
@@ -176,17 +172,17 @@
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmedAsync([Bind("Id, Category")] string id, string category)
         {
-            await this.picturesRepository.InitAsync("Pictures");
+            await this.galleryRepository.InitAsync("Pictures");
 
-            await this.picturesRepository.DeleteItemAsync(id, category);
+            await this.galleryRepository.DeleteItemAsync(id, category);
 
             return RedirectToAction("Index");
         }
 
         [ActionName("DeleteAll")]
-        public ActionResult DeleteAll()
+        public async Task<ActionResult> DeleteAllAsync()
         {
-            FillCategories("All");
+            await FillCategoriesAsync("All");
             return View();
         }
 
@@ -194,28 +190,27 @@
         [ActionName("DeleteAll")]
         public async Task<ActionResult> DeleteAllAsync(string category)
         {
-            await this.picturesRepository.InitAsync("Pictures");
-            await this.categoriesRepository.InitAsync("Categories");
+            await this.galleryRepository.InitAsync("Categories");
+            var categories = await this.galleryRepository.GetItemsAsync<CategoryItem>();
+
+            await this.galleryRepository.InitAsync("Pictures");
 
             if (category != "All")
             {
-                var response = await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
-
-                var categoryItems = await this.categoriesRepository.GetItemsAsync(cat => cat.Title == category);
+                var response = await this.galleryRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
             }
             else
             {
                 
-                var categories = await this.categoriesRepository.GetItemsAsync();
                 foreach(var cat in categories)
                 {
-                    await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat.Title);
+                    await this.galleryRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat.Title);
                 }
             }
 
             if (category != "All")
             {
-                FillCategories("All");
+                await FillCategoriesAsync("All");
                 ViewBag.CategoryRemoved = category;
 
                 return View();
@@ -224,12 +219,12 @@
                 return RedirectToAction("Index");
         }
 
-        private void FillCategories(string selectedCategory = null)
+        private async Task FillCategoriesAsync(string selectedCategory = null)
         {
-            this.categoriesRepository.InitAsync("Categories");
+            await this.galleryRepository.InitAsync("Categories");
 
             List<SelectListItem> items = new List<SelectListItem>();
-            var categoryItems = this.categoriesRepository.GetItemsAsync().Result;
+            var categoryItems = await this.galleryRepository.GetItemsAsync<CategoryItem>();
 
             if(!string.IsNullOrEmpty(selectedCategory) && !categoryItems.Any(item => item.Title == selectedCategory))
             {

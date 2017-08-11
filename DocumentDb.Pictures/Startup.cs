@@ -34,8 +34,7 @@ namespace DocumentDb.Pictures
         public void ConfigureServices(IServiceCollection services)
         {
             // Repositories
-            services.AddScoped<IDocumentDBRepository<PictureItem>, GalleryDBRepository<PictureItem>>();
-            services.AddScoped<IDocumentDBRepository<CategoryItem>, GalleryDBRepository<CategoryItem>>();
+            services.AddScoped<IDocumentDBRepository<GalleryDBRepository>, GalleryDBRepository>();
             
             // Add framework services.
             services.AddMvc();

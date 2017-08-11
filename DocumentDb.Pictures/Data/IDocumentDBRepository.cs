@@ -8,23 +8,23 @@ using System.Threading.Tasks;
 
 namespace DocumentDb.Pictures.Data
 {
-    public interface IDocumentDBRepository<T> where T : class
+    public interface IDocumentDBRepository<DatabaseDB>
     {
-        Task<T> GetItemAsync(string id);
+        Task<T> GetItemAsync<T>(string id) where T : class;
 
-        Task<T> GetItemAsync(string id, string partitionKey);
+        Task<T> GetItemAsync<T>(string id, string partitionKey) where T : class;
 
         Task<Document> GetDocumentAsync(string id, string partitionKey);
 
-        Task<IEnumerable<T>> GetItemsAsync();
+        Task<IEnumerable<T>> GetItemsAsync<T>() where T : class;
 
-        Task<IEnumerable<T>> GetItemsAsync(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<T>> GetItemsAsync<T>(Expression<Func<T, bool>> predicate) where T : class;
 
-        Task<Document> CreateItemAsync(T item);
+        Task<Document> CreateItemAsync<T>(T item) where T : class;
 
-        Task<Document> CreateItemAsync(T item, RequestOptions options);
+        Task<Document> CreateItemAsync<T>(T item, RequestOptions options) where T : class;
 
-        Task<Document> UpdateItemAsync(string id, T item);
+        Task<Document> UpdateItemAsync<T>(string id, T item) where T : class;
 
         Task<ResourceResponse<Attachment>> CreateAttachmentAsync(string attachmentsLink, object attachment, RequestOptions options);
 

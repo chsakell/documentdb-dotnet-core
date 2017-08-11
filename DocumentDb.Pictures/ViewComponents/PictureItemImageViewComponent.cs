@@ -12,20 +12,20 @@ namespace DocumentDb.Pictures.ViewComponents
 {
     public class PictureItemImageViewComponent : ViewComponent
     {
-        private IDocumentDBRepository<PictureItem> picturesRepository;
+        private IDocumentDBRepository<GalleryDBRepository> galleryRepository;
 
-        public PictureItemImageViewComponent(IDocumentDBRepository<PictureItem> picturesRepository)
+        public PictureItemImageViewComponent(IDocumentDBRepository<GalleryDBRepository> galleryRepository)
         {
-            this.picturesRepository = picturesRepository;
+            this.galleryRepository = galleryRepository;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(PictureItem item)
         {
             string image = string.Empty;
-            Document document = await this.picturesRepository.GetDocumentAsync(item.Id, item.Category);
+            Document document = await this.galleryRepository.GetDocumentAsync(item.Id, item.Category);
 
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-            Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+            Attachment attachment = await this.galleryRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
             var file = attachment.GetPropertyValue<byte[]>("file");
 
