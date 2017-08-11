@@ -1,33 +1,27 @@
 ﻿namespace DocumentDb.Pictures.Controllers
 {
-    using System.Net;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc;
     using Models;
     using Microsoft.AspNetCore.Mvc.Rendering;
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Http;
-    using System.IO;
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
     using System;
     using Sakura.AspNetCore;
     using DocumentDb.Pictures.Data;
+    using System.Linq;
 
     public class PicturesController : Controller
     {
-        private List<string> Categories;
         private IDocumentDBRepository<PictureItem> picturesRepository;
+        private IDocumentDBRepository<CategoryItem> categoriesRepository;
 
-        public PicturesController(IDocumentDBRepository<PictureItem> picturesRepository)
+        public PicturesController(IDocumentDBRepository<PictureItem> picturesRepository, IDocumentDBRepository<CategoryItem> categoriesRepository)
         {
             this.picturesRepository = picturesRepository;
-
-            this.Categories = new List<string>()
-            {
-                "3D & Abstract", "Animals & Birds", "Anime", "Beach","Bikes", "Cars","Celebrations", "Celebrities","Christmas", "Creative Graphics","Cute", "Digital Universe","Dreamy & Fantasy", "Flowers","Games", "Inspirational","Love", "Military",
-                "Music", "Movies","Nature", "Others","Photography", "Sports","Technology", "Travel & World","Vector & Designs"
-            };
+            this.categoriesRepository = categoriesRepository;
         }
 
         [ActionName("Index")]
@@ -192,7 +186,6 @@
         [ActionName("DeleteAll")]
         public ActionResult DeleteAll()
         {
-            Categories.Add("All");
             FillCategories("All");
             return View();
         }
@@ -202,40 +195,62 @@
         public async Task<ActionResult> DeleteAllAsync(string category)
         {
             await this.picturesRepository.InitAsync("Pictures");
+            await this.categoriesRepository.InitAsync("Categories");
 
             if (category != "All")
             {
                 var response = await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
+
+                var categoryItems = await this.categoriesRepository.GetItemsAsync(cat => cat.Title == category);
             }
             else
             {
-                foreach(string cat in Categories)
+                
+                var categories = await this.categoriesRepository.GetItemsAsync();
+                foreach(var cat in categories)
                 {
-                    await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat);
+                    await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat.Title);
                 }
             }
 
-            Categories.Add("All");
-            FillCategories("All");
-            ViewBag.CategoryRemoved = category;
+            if (category != "All")
+            {
+                FillCategories("All");
+                ViewBag.CategoryRemoved = category;
 
-            return View();
+                return View();
+            }
+            else
+                return RedirectToAction("Index");
         }
 
         private void FillCategories(string selectedCategory = null)
         {
-            List<SelectListItem> items = new List<SelectListItem>();
+            this.categoriesRepository.InitAsync("Categories");
 
-            foreach (var category in Categories)
+            List<SelectListItem> items = new List<SelectListItem>();
+            var categoryItems = this.categoriesRepository.GetItemsAsync().Result;
+
+            if(!string.IsNullOrEmpty(selectedCategory) && !categoryItems.Any(item => item.Title == selectedCategory))
             {
-                if (!string.IsNullOrEmpty(selectedCategory) && category == selectedCategory)
+                items.Add(new SelectListItem { Text = selectedCategory, Value = selectedCategory, Selected = true });
+            }
+
+            foreach (var category in categoryItems)
+            {
+                if (!string.IsNullOrEmpty(selectedCategory) && category.Title == selectedCategory)
                 {
-                    items.Add(new SelectListItem { Text = category, Value = category, Selected = true });
+                    items.Add(new SelectListItem { Text = category.Title, Value = category.Title, Selected = true });
                 }
                 else
                 {
-                    items.Add(new SelectListItem { Text = category, Value = category });
+                    items.Add(new SelectListItem { Text = category.Title, Value = category.Title });
                 }
+            }
+
+            if(string.IsNullOrEmpty(selectedCategory))
+            {
+                items.First().Selected = true;
             }
 
             ViewBag.Category = items;

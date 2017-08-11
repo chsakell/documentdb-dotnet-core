@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DocumentDb.Pictures.Data
 {
-    public class GalleryDBRepository : DocumentDBRepositoryBase<PictureItem>, IDocumentDBRepository<PictureItem>
+    public class GalleryDBRepository<T> : DocumentDBRepositoryBase<T>, IDocumentDBRepository<T> where T: class
     {
         public GalleryDBRepository()
         {

@@ -24,9 +24,14 @@ namespace DocumentDb.Pictures.Data
 
             client = new DocumentClient(new Uri(Endpoint), Key);
             CreateDatabaseIfNotExistsAsync("Gallery").Wait();
+            // Pictures Collection
             CreateCollectionIfNotExistsAsync("Gallery", "Pictures", "category").Wait();
             CreateTriggerIfNotExistsAsync("Gallery", "Pictures", "createDate", @"Data\Triggers\createDate.js").Wait();
             CreateStoredProcedureIfNotExistsAsync("Gallery", "Pictures", "bulkDelete", @"Data\StoredProcedures\bulkDelete.js").Wait();
+
+            // Categories collection
+            CreateCollectionIfNotExistsAsync("Gallery", "Categories").Wait();
+
             InitGalleryAsync().Wait();
         }
 
@@ -143,11 +148,13 @@ namespace DocumentDb.Pictures.Data
 
         private static async Task InitGalleryAsync()
         {
-            GalleryDBRepository galleryRepository = new GalleryDBRepository();
-            await galleryRepository.InitAsync("Pictures");
+            // Init Pictures
+            GalleryDBRepository<PictureItem> picturesRepository = new GalleryDBRepository<PictureItem>();
 
-            var items = await galleryRepository.GetItemsAsync();
-            if (items.Count() == 0)
+            await picturesRepository.InitAsync("Pictures");
+
+            var pictures = await picturesRepository.GetItemsAsync();
+            if (pictures.Count() == 0)
             {
                 foreach (var directory in Directory.GetDirectories(Path.Combine(Config.ContentRootPath, @"wwwroot\images\gallery")))
                 {
@@ -165,17 +172,44 @@ namespace DocumentDb.Pictures.Data
                         };
 
                         RequestOptions options = new RequestOptions { PreTriggerInclude = new List<string> { "createDate" } };
-                        Document document = await galleryRepository.CreateItemAsync(item, options);
+                        Document document = await picturesRepository.CreateItemAsync(item, options);
 
                         new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider().TryGetContentType(fileName, out contentType);
                         var attachment = new Attachment { ContentType = contentType, Id = "wallpaper", MediaLink = string.Empty };
                         var input = new byte[File.OpenRead(filePath).Length];
                         File.OpenRead(filePath).Read(input, 0, input.Length);
                         attachment.SetPropertyValue("file", input);
-                        ResourceResponse<Attachment> createdAttachment = await galleryRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
+                        ResourceResponse<Attachment> createdAttachment = await picturesRepository.CreateAttachmentAsync(document.AttachmentsLink, attachment, new RequestOptions() { PartitionKey = new PartitionKey(item.Category) });
                     }
                 }
             }
+
+            // Init Categories
+            GalleryDBRepository<CategoryItem> categoriesRepository = new GalleryDBRepository<CategoryItem>();
+
+            await categoriesRepository.InitAsync("Categories");
+            var Categories = new List<string>()
+            {
+                "3D & Abstract", "Animals & Birds", "Anime", "Beach","Bikes", "Cars","Celebrations", "Celebrities","Christmas", "Creative Graphics","Cute", "Digital Universe","Dreamy & Fantasy", "Flowers","Games", "Inspirational","Love", "Military",
+                "Music", "Movies","Nature", "Others","Photography", "Sports","Technology", "Travel & World","Vector & Designs"
+            };
+
+            var categories = await categoriesRepository.GetItemsAsync();
+
+            if (categories.Count() == 0)
+            {
+                foreach (var category in Categories)
+                {
+                    CategoryItem item = new CategoryItem()
+                    {
+                        Title = category
+                    };
+
+                    Document document = await categoriesRepository.CreateItemAsync(item);
+
+                }
+            }
+
         }
     }
 }

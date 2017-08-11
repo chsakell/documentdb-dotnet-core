@@ -150,6 +150,11 @@ namespace DocumentDb.Pictures.Data
             return await client.ReplaceAttachmentAsync(attachment, options);
         }
 
+        public async Task DeleteItemAsync(string id)
+        {
+            await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
+        }
+
         public async Task DeleteItemAsync(string id, string partitionKey)
         {
             await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });

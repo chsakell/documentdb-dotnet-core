@@ -32,6 +32,8 @@ namespace DocumentDb.Pictures.Data
 
         Task<ResourceResponse<Attachment>> ReplaceAttachmentAsync(Attachment attachment, RequestOptions options);
 
+        Task DeleteItemAsync(string id);
+
         Task DeleteItemAsync(string id, string partitionKey);
 
         Task<StoredProcedureResponse<dynamic>> ExecuteStoredProcedureAsync(string procedureName, string query, string partitionKey);
