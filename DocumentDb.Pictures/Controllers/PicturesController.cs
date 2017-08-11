@@ -211,7 +211,7 @@
             {
                 foreach(string cat in Categories)
                 {
-                    await DocumentDBRepository<PictureItem>.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat);
+                    await this.picturesRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat);
                 }
             }
 

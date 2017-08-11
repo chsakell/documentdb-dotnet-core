@@ -71,7 +71,8 @@ namespace DocumentDb.Pictures
                     template: "{controller=Pictures}/{action=Index}/{id?}");
             });
 
-            DocumentDBRepository<PictureItem>.Initialize();
+            //DocumentDBRepository<PictureItem>.Initialize();
+            DocumentDBInitializer.Initialize(Configuration);
         }
     }
 }

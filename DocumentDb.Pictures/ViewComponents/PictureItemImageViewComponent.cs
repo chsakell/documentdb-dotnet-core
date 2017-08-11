@@ -1,4 +1,5 @@
-﻿using DocumentDb.Pictures.Models;
+﻿using DocumentDb.Pictures.Data;
+using DocumentDb.Pictures.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -11,18 +12,20 @@ namespace DocumentDb.Pictures.ViewComponents
 {
     public class PictureItemImageViewComponent : ViewComponent
     {
-        public PictureItemImageViewComponent()
+        private IDocumentDBRepository<PictureItem> picturesRepository;
+
+        public PictureItemImageViewComponent(IDocumentDBRepository<PictureItem> picturesRepository)
         {
-            
+            this.picturesRepository = picturesRepository;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(PictureItem item)
         {
             string image = string.Empty;
-            Document document = await DocumentDBRepository<Document>.GetItemAsync(item.Id, item.Category);
+            Document document = await this.picturesRepository.GetDocumentAsync(item.Id, item.Category);
 
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-            Attachment attachment = await DocumentDBRepository<PictureItem>.ReadAttachmentAsync(attachLink.ToString(), item.Category);
+            Attachment attachment = await this.picturesRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
 
             var file = attachment.GetPropertyValue<byte[]>("file");
 
