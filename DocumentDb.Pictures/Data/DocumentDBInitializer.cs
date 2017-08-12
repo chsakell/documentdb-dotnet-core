@@ -33,7 +33,7 @@ namespace DocumentDb.Pictures.Data
             CreateCollectionIfNotExistsAsync("Gallery", "Categories").Wait();
             CreateUserDefinedFunctionIfNotExistsAsync("Gallery", "Categories", "toUpperCase", @"Data\UDFs\toUpperCase.js").Wait();
 
-            InitGalleryAsync().Wait();
+            InitGalleryAsync(configuration).Wait();
         }
 
         private static async Task CreateDatabaseIfNotExistsAsync(string DatabaseId)
@@ -170,10 +170,10 @@ namespace DocumentDb.Pictures.Data
             }
         }
 
-        private static async Task InitGalleryAsync()
+        private static async Task InitGalleryAsync(IConfiguration configuration)
         {
             // Init Pictures
-            GalleryDBRepository galleryRepository = new GalleryDBRepository();
+            GalleryDBRepository galleryRepository = new GalleryDBRepository(configuration);
 
             await galleryRepository.InitAsync("Pictures");
 

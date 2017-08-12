@@ -46,6 +46,9 @@ namespace DocumentDb.Pictures
                 // Use default pager options.
                 options.ConfigureDefault();
             });
+
+            // Make Configuration injectable
+            services.AddSingleton<IConfiguration>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
