@@ -120,6 +120,11 @@ namespace DocumentDb.Pictures.Data
             return results;
         }
 
+        public IEnumerable<T> CreateDocumentQuery<T>(string query, FeedOptions options) where T : class
+        {
+            return client.CreateDocumentQuery<T>(collection.DocumentsLink, query, options).AsEnumerable();
+        }
+
         public async Task<Document> CreateItemAsync<T>(T item) where T : class
         {
             return await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item);

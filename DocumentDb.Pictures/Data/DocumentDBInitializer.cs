@@ -31,6 +31,7 @@ namespace DocumentDb.Pictures.Data
 
             // Categories collection
             CreateCollectionIfNotExistsAsync("Gallery", "Categories").Wait();
+            CreateUserDefinedFunctionIfNotExistsAsync("Gallery", "Categories", "toUpperCase", @"Data\UDFs\toUpperCase.js").Wait();
 
             InitGalleryAsync().Wait();
         }
@@ -143,6 +144,29 @@ namespace DocumentDb.Pictures.Data
                 };
                 storedProcedure = await client.CreateStoredProcedureAsync(storedProceduresLink,
             storedProcedure);
+            }
+        }
+
+        private static async Task CreateUserDefinedFunctionIfNotExistsAsync(string databaseId, string collectionId, string udfName, string udfPath)
+        {
+            DocumentCollection collection = await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseId, collectionId));
+
+            UserDefinedFunction userDefinedFunction =
+                        client.CreateUserDefinedFunctionQuery(collection.UserDefinedFunctionsLink)
+                            .Where(udf => udf.Id == udfName)
+                            .AsEnumerable()
+                            .FirstOrDefault();
+
+            if (userDefinedFunction == null)
+            {
+                // Register User Defined Function
+                userDefinedFunction = new UserDefinedFunction
+                {
+                    Id = udfName,
+                    Body = System.IO.File.ReadAllText(Path.Combine(Config.ContentRootPath, udfPath))
+                };
+
+                await client.CreateUserDefinedFunctionAsync(collection.UserDefinedFunctionsLink, userDefinedFunction);
             }
         }
 

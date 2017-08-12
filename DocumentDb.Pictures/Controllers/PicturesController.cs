@@ -93,8 +93,6 @@
                 return NotFound();
             }
 
-            await FillCategoriesAsync(category);
-
             Document document = await this.galleryRepository.GetDocumentAsync(id, category);
 
             var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
@@ -115,6 +113,8 @@
             {
                 ViewBag.Image = string.Empty;
             }
+
+            await FillCategoriesAsync(category);
 
             return View(item);
         }
@@ -182,7 +182,7 @@
         [ActionName("DeleteAll")]
         public async Task<ActionResult> DeleteAllAsync()
         {
-            await FillCategoriesAsync("All");
+            await FillCategoriesAsync("All", true);
             return View();
         }
 
@@ -191,18 +191,19 @@
         public async Task<ActionResult> DeleteAllAsync(string category)
         {
             await this.galleryRepository.InitAsync("Categories");
+
             var categories = await this.galleryRepository.GetItemsAsync<CategoryItem>();
 
             await this.galleryRepository.InitAsync("Pictures");
 
             if (category != "All")
             {
-                var response = await this.galleryRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", category);
+                var response = await this.galleryRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", categories.Where(cat => cat.Title.ToLower() == category.ToLower()).First().Title);
             }
             else
             {
-                
-                foreach(var cat in categories)
+
+                foreach (var cat in categories)
                 {
                     await this.galleryRepository.ExecuteStoredProcedureAsync("bulkDelete", "SELECT * FROM c", cat.Title);
                 }
@@ -219,14 +220,20 @@
                 return RedirectToAction("Index");
         }
 
-        private async Task FillCategoriesAsync(string selectedCategory = null)
+        private async Task FillCategoriesAsync(string selectedCategory = null, bool toUpperCase = false)
         {
+            IEnumerable<CategoryItem> categoryItems = null;
+
             await this.galleryRepository.InitAsync("Categories");
 
             List<SelectListItem> items = new List<SelectListItem>();
-            var categoryItems = await this.galleryRepository.GetItemsAsync<CategoryItem>();
 
-            if(!string.IsNullOrEmpty(selectedCategory) && !categoryItems.Any(item => item.Title == selectedCategory))
+            if (!toUpperCase)
+                categoryItems = await this.galleryRepository.GetItemsAsync<CategoryItem>();
+            else
+                categoryItems = this.galleryRepository.CreateDocumentQuery<CategoryItem>("SELECT c.id, udf.toUpperCase(c.title) as Title FROM Categories c", new FeedOptions() { EnableCrossPartitionQuery = true });
+
+            if (!string.IsNullOrEmpty(selectedCategory) && !categoryItems.Any(item => item.Title == selectedCategory))
             {
                 items.Add(new SelectListItem { Text = selectedCategory, Value = selectedCategory, Selected = true });
             }
@@ -243,7 +250,7 @@
                 }
             }
 
-            if(string.IsNullOrEmpty(selectedCategory))
+            if (string.IsNullOrEmpty(selectedCategory))
             {
                 items.First().Selected = true;
             }

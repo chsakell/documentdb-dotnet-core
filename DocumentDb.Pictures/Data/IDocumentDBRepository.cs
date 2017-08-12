@@ -20,6 +20,8 @@ namespace DocumentDb.Pictures.Data
 
         Task<IEnumerable<T>> GetItemsAsync<T>(Expression<Func<T, bool>> predicate) where T : class;
 
+        IEnumerable<T> CreateDocumentQuery<T>(string query, FeedOptions options) where T : class;
+
         Task<Document> CreateItemAsync<T>(T item) where T : class;
 
         Task<Document> CreateItemAsync<T>(T item, RequestOptions options) where T : class;

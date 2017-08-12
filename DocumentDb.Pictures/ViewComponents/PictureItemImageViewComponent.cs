@@ -21,6 +21,7 @@ namespace DocumentDb.Pictures.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync(PictureItem item)
         {
+            await this.galleryRepository.InitAsync("Pictures");
             string image = string.Empty;
             Document document = await this.galleryRepository.GetDocumentAsync(item.Id, item.Category);
 
