@@ -13,10 +13,21 @@ namespace DocumentDb.Pictures.Mappings
         public DocumentMappingProfile()
         {
             CreateMap<Document, PictureItem>()
+                .ForAllMembers(opt =>
+                {
+                    opt.MapFrom(doc => doc.GetPropertyValue<object>(opt.DestinationMember.Name.ToLower()));
+                });
+
+
+            // Could be something like this..
+            
+            /*
+            CreateMap<Document, PictureItem>()
                 .ForMember(vm => vm.Id, map => map.MapFrom(doc => doc.GetPropertyValue<string>("id")))
                 .ForMember(vm => vm.Title, map => map.MapFrom(doc => doc.GetPropertyValue<string>("title")))
                 .ForMember(vm => vm.Category, map => map.MapFrom(doc => doc.GetPropertyValue<string>("category")))
                 .ForMember(vm => vm.DateCreated, map => map.MapFrom(doc => doc.GetPropertyValue<DateTime>("dateCreated")));
+            */
         }
     }
 }

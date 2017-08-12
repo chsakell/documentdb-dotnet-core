@@ -22,8 +22,11 @@ namespace DocumentDb.Pictures.Data
             if (client == null)
                 client = new DocumentClient(new Uri(Endpoint), Key);
 
-            CollectionId = collectionId;
-            collection = await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+            if (CollectionId != collectionId)
+            {
+                CollectionId = collectionId;
+                collection = await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+            }
         }
     }
 }
