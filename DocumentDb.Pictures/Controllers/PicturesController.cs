@@ -12,6 +12,7 @@
     using Sakura.AspNetCore;
     using DocumentDb.Pictures.Data;
     using System.Linq;
+    using AutoMapper;
 
     public class PicturesController : Controller
     {
@@ -87,31 +88,14 @@
 
             await this.galleryRepository.InitAsync("Pictures");
 
-            PictureItem item = await this.galleryRepository.GetItemAsync<PictureItem>(id, category);
+            Document document = await this.galleryRepository.GetDocumentAsync(id, category);
+
+            //PictureItem item = await this.galleryRepository.GetItemAsync<PictureItem>(id, category);
+            PictureItem item = Mapper.Map<PictureItem>(document);
+
             if (item == null)
             {
                 return NotFound();
-            }
-
-            Document document = await this.galleryRepository.GetDocumentAsync(id, category);
-
-            var attachLink = UriFactory.CreateAttachmentUri("Gallery", "Pictures", document.Id, "wallpaper");
-
-            Attachment attachment = await this.galleryRepository.ReadAttachmentAsync(attachLink.ToString(), item.Category);
-
-            if (attachment != null)
-            {
-                var file = attachment.GetPropertyValue<byte[]>("file");
-
-                if (file != null)
-                {
-                    string bytes = Convert.ToBase64String(file);
-                    ViewBag.Image = string.Format("data:{0};base64,{1}", attachment.ContentType, bytes);
-                }
-            }
-            else
-            {
-                ViewBag.Image = string.Empty;
             }
 
             await FillCategoriesAsync(category);

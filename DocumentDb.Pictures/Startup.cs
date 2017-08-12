@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using DocumentDb.Pictures.Models;
 using Sakura.AspNetCore.Mvc;
 using DocumentDb.Pictures.Data;
+using DocumentDb.Pictures.Mappings;
 
 namespace DocumentDb.Pictures
 {
@@ -64,6 +65,8 @@ namespace DocumentDb.Pictures
             }
 
             app.UseStaticFiles();
+
+            AutoMapperConfiguration.Configure();
 
             app.UseMvc(routes =>
             {

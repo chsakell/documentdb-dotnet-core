@@ -48,6 +48,7 @@
     <Content Include="wwwroot\lib\lightbox\js\lightbox.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.1.1" />
     <PackageReference Include="jQWidgets.AspNetCore.Mvc.Bootstrap.TagHelpers" Version="1.0.6" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
