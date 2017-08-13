@@ -1,6 +1,6 @@
 # Azure Cosmos DB: DocumentDB API in Action
 
-Blog post:<a href="http://wp.me/p3mRWu-1f8" target="_blank">Azure Cosmos DB: DocumentDB API in Action</a> <br/><br/>
+Blog post: <a href="http://wp.me/p3mRWu-1f8" target="_blank">Azure Cosmos DB: DocumentDB API in Action</a> <br/><br/>
 
 <a href="http://wp.me/p3mRWu-1f8" rel="attachment wp-att-3961" target="_blank"><img src="https://chsakell.files.wordpress.com/2017/08/azure-cosmos-documentdb-06.png" alt="aspnet5-agnular2-03" width="700" height="355" class="alignnone size-full wp-image-3961"></a>
 
