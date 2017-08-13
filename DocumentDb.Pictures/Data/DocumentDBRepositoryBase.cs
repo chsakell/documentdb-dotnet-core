@@ -47,12 +47,12 @@ namespace DocumentDb.Pictures.Data
             }
         }
 
-        public async Task<Document> GetDocumentAsync(string id, string partitionKey)
+        public async Task<T> GetItemAsync<T>(string id, string partitionKey) where T : class
         {
             try
             {
                 Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
-                return document;
+                return (T)(dynamic)document;
             }
             catch (DocumentClientException e)
             {
@@ -67,12 +67,12 @@ namespace DocumentDb.Pictures.Data
             }
         }
 
-        public async Task<T> GetItemAsync<T>(string id, string partitionKey) where T : class
+        public async Task<Document> GetDocumentAsync(string id, string partitionKey)
         {
             try
             {
                 Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
-                return (T)(dynamic)document;
+                return document;
             }
             catch (DocumentClientException e)
             {
