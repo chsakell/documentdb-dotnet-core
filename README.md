@@ -17,7 +17,7 @@ Blog post: <a href="http://wp.me/p3mRWu-1f8" target="_blank">Azure Cosmos DB: Do
 
 <h3>Installation instructions</h3>
 <ol>
-<li>Install <a href="https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator" target="_blank">Azure Cosmos DB Emulator</a>./li>
+<li>Install <a href="https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator" target="_blank">Azure Cosmos DB Emulator</a>.</li>
 <li>Clone the repository and build the solution to restore the required packages</li>
 <li>Start the emulator</li>
 <li>Run the application</i>
