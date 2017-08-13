@@ -11,7 +11,7 @@ Blog post: <a href="http://wp.me/p3mRWu-1f8" target="_blank">Azure Cosmos DB: Do
 <li>Create and consume JavaScript stored procedures, triggers and user defined functions</li>
 <li>Add attachments to JSON documents</li>
 <li>Generic Data DocumentDB repositories</li>
-<li>Use AutoMapper to DocumentDB documents to application domain models</li>
+<li>Use AutoMapper to map DocumentDB documents into application domain models</li>
 </ul>
 
 
