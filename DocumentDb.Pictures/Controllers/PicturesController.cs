@@ -13,6 +13,7 @@
     using DocumentDb.Pictures.Data;
     using System.Linq;
     using AutoMapper;
+    using Newtonsoft.Json;
 
     public class PicturesController : Controller
     {
@@ -92,6 +93,12 @@
 
             //PictureItem item = await this.galleryRepository.GetItemAsync<PictureItem>(id, category);
             PictureItem item = Mapper.Map<PictureItem>(document);
+
+            // You could use the followings as well
+            /*
+            PictureItem itemWithNewtonSoft = JsonConvert.DeserializeObject<PictureItem>(document.ToString());
+            PictureItem itemWithDynamic = (dynamic)document;
+            */
 
             if (item == null)
             {
